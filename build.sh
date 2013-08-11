@@ -1,0 +1,1 @@
+  g++ -W -Wall -Wextra -pedantic -shared -std=c++0x -fPIC -include src/precompiled/includes.h -o bin/zRender.so src/*.h src/*.cpp
