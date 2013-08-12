@@ -24,6 +24,7 @@ Python API:
 from zRender import *
 
 r = zRender()
+
 rendered_html = r.render("index.html", {"name": "Mr. Awesome", "company": "Awesome Inc."})
 
 Version history:
