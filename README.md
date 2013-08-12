@@ -12,19 +12,11 @@ Usage:
 -------------------------
 Common variable insert:
 
-&lt;html&gt;
- &lt;body&gt;
-  Hello, << $name >>
- &lt;/body&gt;
-&lt;/html&gt;
+Hello, << $name >>
 
 Common include:
 
-&lt;html&gt;
- &lt;body&gt;
-  << include hello_world.html >>
- &lt;/body&gt;
-&lt;/html&gt;
+<< include hello_world.html >>
 
 
 Python API:
