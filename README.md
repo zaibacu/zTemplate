@@ -1,15 +1,13 @@
--------------------------
 License:
 -------------------------
 This project is licensed under MIT license, look at LICENSE.md file
 
--------------------------
+
 Description:
 -------------------------
 Web template rendering library written in C. 
 Nothing fancy, just trying to squeez some speed
 
--------------------------
 Usage:
 -------------------------
 Common variable insert:
@@ -36,7 +34,6 @@ from zRender import *
 r = zRender()
 rendered_html = r.render("index.html", {"name": "Mr. Awesome", "company": "Awesome Inc."})
 
--------------------------
 Version history:
 -------------------------
 Version 0.1:
