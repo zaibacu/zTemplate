@@ -54,3 +54,26 @@ long seek(const zString p_cszSource, const zString p_cszPattern, const unsigned 
 	}
 	return -1;
 }
+
+void str_insert(zString p_szSource, const zString p_cszInclude, const unsigned long p_culStart, const unsigned long p_culEnd)
+{
+	if(p_szSource == NULL)
+		return;
+
+	unsigned long ulIncludeSize = 0;
+	if(p_cszInclude != NULL)
+		ulIncludeSize = strlen(p_cszInclude);
+
+	const unsigned long culSize = strlen(p_szSource) - (p_culEnd - p_culStart) + ulIncludeSize;
+	zString chBuff = NULL;
+	chBuff = (zString)malloc(sizeof(zString) * (culSize + 1));
+	chBuff[culSize] = '\0';
+	memcpy(chBuff, p_szSource, p_culStart);
+	if(p_cszInclude != NULL)
+		memcpy(chBuff + p_culStart, p_cszInclude, ulIncludeSize);
+	memcpy(chBuff + p_culStart + ulIncludeSize, p_szSource + p_culEnd, strlen(p_szSource) - p_culEnd);
+
+	memcpy(p_szSource, chBuff, strlen(chBuff));
+	p_szSource[strlen(chBuff)] = '\0';
+	free(chBuff);
+} 
