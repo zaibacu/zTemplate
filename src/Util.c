@@ -21,7 +21,6 @@ zString trim(const zString p_cszText)
 zString read_file(const zString p_cszName)
 {
 	zString chBuff = NULL;
-	unsigned long ulSize = 0;
 	unsigned long ulDirLen = strlen(TEMPLATE_DIR) + strlen(p_cszName);
 	zString chDir = (zString)malloc(sizeof(zString) * (ulDirLen + 1));
 	strcpy(chDir, TEMPLATE_DIR);
@@ -30,12 +29,24 @@ zString read_file(const zString p_cszName)
 	FILE* pFile = fopen(chDir, "r");
 	if(pFile)
 	{
+#ifdef _USE_FSEEK_IMPL
+		unsigned long ulSize = 0;
 		fseek (pFile , 0 , SEEK_END);
 		ulSize = ftell (pFile);
 		rewind (pFile);
 		chBuff = (zString)malloc(sizeof(zString) * (ulSize + 1));
 		fread(chBuff, 1, ulSize, pFile);
 		chBuff[ulSize] = '\0';
+
+#else
+		#define BUFF_SIZE 80
+		chBuff = (zString)calloc(80, sizeof(zString));
+		zString chLine = (zString)malloc(sizeof(zString) * BUFF_SIZE);
+		while(fgets(chLine, BUFF_SIZE, pFile) != NULL)
+		{
+			strcat(chBuff, chLine);
+		} 
+#endif
 		fclose(pFile);
 	}
 	free(chDir);
