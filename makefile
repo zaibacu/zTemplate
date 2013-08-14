@@ -1,9 +1,7 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-fPIC -m64 -std=c99
 BIN=bin
 INCLUDE=-include src/precompiled/includes.h
-#-m64 for x64, -m32 for x86
-SYSTEM=-m32
 
 ifeq ($(OS),Windows_NT)
     #Windows stuff
@@ -18,10 +16,10 @@ endif
 all: compile
 	
 compile:
-	$(CC) -fPIC $(SYSTEM) -o $(BIN)/$(LIBRARY) -DTEMPLATE_DIR=\"tmpl/\" -shared src/*.c $(INCLUDE)
+	$(CC) $(CFLAGS) -o $(BIN)/$(LIBRARY) -DTEMPLATE_DIR=\"tmpl/\" -shared src/*.c $(INCLUDE)
 
 test:
-	$(CC) -g3 -fPIC $(SYSTEM) -o $(TESTS) $(CFLAGS) -DTEMPLATE_DIR=\"tests/\" src/*.c tests/tests.c $(INCLUDE)
+	$(CC) -g3 $(CFLAGS) -o $(TESTS) $(CFLAGS) -DTEMPLATE_DIR=\"tests/\" src/*.c tests/tests.c $(INCLUDE)
 	./$(TESTS)
 
 clean:

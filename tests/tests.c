@@ -58,7 +58,7 @@ bool trim_test()
 bool read_file_test()
 {
 	printf("Test: %s - ", __FUNCTION__);
-	zString szResult = read_file("tests/test_tmpl1_result.html");
+	zString szResult = read_file("test_tmpl1.html");
 	free(szResult);
 	return true;
 }
