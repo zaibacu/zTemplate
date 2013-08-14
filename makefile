@@ -2,7 +2,8 @@ CC=gcc
 CFLAGS=-Wall
 BIN=bin
 INCLUDE=-include src/precompiled/includes.h
-SYSTEM=-m64
+#-m64 for x64, -m32 for x86
+SYSTEM=-m32
 
 ifeq ($(OS),Windows_NT)
     #Windows stuff

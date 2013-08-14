@@ -36,6 +36,7 @@ zString read_file(const zString p_cszName)
 		chBuff = (zString)malloc(sizeof(zString) * (ulSize + 1));
 		fread(chBuff, 1, ulSize, pFile);
 		chBuff[ulSize] = '\0';
+		
 		fclose(pFile);
 	}
 	free(chDir);

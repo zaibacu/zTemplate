@@ -13,15 +13,12 @@ zString search_parameter(struct Param* p_pParameters, const zString p_cszName)
 		if(pPtr->m_szKey != NULL && pPtr->m_Val.m_uiType == 1 && strcmp(pPtr->m_szKey, p_cszName) == 0)
 		{
 			//We want to return a copy instead of pointer to string
-			printf("Found parameter with key: %s\n", pPtr->m_szKey);
-
 			const zString cszValue = ((struct StringValue*)pPtr->m_Val.m_pValue)->m_szValue;
 			
 			const unsigned long culSize = strlen(cszValue);
 			zString szCopy = (zString)malloc(sizeof(zString) * (culSize + 1));
 			memcpy(szCopy, cszValue, culSize);
 			szCopy[culSize] = '\0';
-			printf("Parsed it to: %s\n", szCopy);
 			return szCopy;
 		}
 		pPtr = pPtr->m_pNext;

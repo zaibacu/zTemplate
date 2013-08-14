@@ -27,7 +27,6 @@ bool render_basic_test()
 
 	zString szResult1 = read_file("test_tmpl1_result.html");
 	zString szResult2 = render("test_tmpl1.html", &param1);
-
 	bool bReturn = strcmp(szResult1, szResult2) == 0;
 	free(szResult1);
 	free(szResult2);
@@ -40,7 +39,6 @@ bool render_include_test()
 
 	zString szResult1 = read_file("test_tmpl2_result.html");
 	zString szResult2 = render("test_tmpl2.html", NULL);
-
 	bool bReturn = strcmp(szResult1, szResult2) == 0;
 	free(szResult1);
 	free(szResult2);
