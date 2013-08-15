@@ -46,6 +46,7 @@ zString read_file(const zString p_cszName)
 		{
 			strcat(chBuff, chLine);
 		} 
+		free(chLine);
 #endif
 		fclose(pFile);
 	}
@@ -61,9 +62,30 @@ long seek(const zString p_cszSource, const zString p_cszPattern, const unsigned 
 	zString szResult = strstr(p_cszSource + p_culStart, p_cszPattern);
 	if(szResult != NULL)
 	{
-		return strlen(p_cszSource) - strlen(szResult) + 1;
+		return strlen(p_cszSource) - strlen(szResult);
 	}
 	return -1;
+}
+
+long seek_back(const zString p_cszSource, const zString p_cszPattern, const unsigned long p_culStart)
+{
+	if(p_cszSource == NULL)
+		return -1;
+
+	long lLast_index = -1;
+	long lOffset = 0;
+	zString szResult = NULL;
+	while(true)
+	{
+		lOffset = seek(p_cszSource, p_cszPattern, lOffset);
+		if(lOffset > p_culStart || lOffset == -1)
+			break;
+
+		lLast_index = lOffset;
+		lOffset += strlen(p_cszPattern);
+	}
+	
+	return lLast_index;
 }
 
 void str_insert(zString p_szSource, const zString p_cszInclude, const unsigned long p_culStart, const unsigned long p_culEnd)
@@ -88,3 +110,28 @@ void str_insert(zString p_szSource, const zString p_cszInclude, const unsigned l
 	p_szSource[strlen(chBuff)] = '\0';
 	free(chBuff);
 } 
+
+bool str_remove(zString p_szSource, const unsigned long p_culStart, const unsigned long p_culEnd)
+{
+	str_insert(p_szSource, NULL, p_culStart, p_culEnd);
+	return true;
+}
+
+bool str_remove_tag(zString p_szSource, const zString p_cszRemove)
+{
+	if(p_szSource == NULL || p_cszRemove == NULL)
+		return false;
+
+	long lStart = seek(p_szSource, p_cszRemove, 0);
+	if(lStart < 0)
+		return false;
+
+	return str_remove(p_szSource, lStart, lStart + strlen(p_cszRemove));
+}
+
+long get_or_default(const long p_clValue, const long p_clDefault)
+{
+	if(p_clValue < 0)
+		return p_clDefault;
+	return p_clValue;
+}

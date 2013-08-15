@@ -4,6 +4,7 @@ struct Value
 {
 	/*
 		type 1 - string
+		type 2 - bool
 	*/
 	unsigned int m_uiType;
 	void* m_pValue;
@@ -12,6 +13,11 @@ struct Value
 struct StringValue
 {
 	const zString m_szValue;
+};
+
+struct BoolValue
+{
+	bool m_bValue;
 };
 
 struct Param
@@ -25,9 +31,16 @@ struct Param
 
 struct Block
 {
+	//Header
+	unsigned long m_ulHeaderStart;
+	unsigned long m_ulHeaderEnd;
+	//Footer
+	unsigned long m_ulFooterStart;
+	unsigned long m_ulFooterEnd;
+	//Content
 	unsigned long m_ulStart;
 	unsigned long m_ulEnd;
-	bool (*exp)(void*);
+	
 	zString m_szBlock;
 };
 

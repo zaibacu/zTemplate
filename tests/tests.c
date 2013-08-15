@@ -5,7 +5,7 @@ bool seek_test()
 {
 	printf("Test: %s - ", __FUNCTION__);
 	const zString szSource = "This is a test string with $$ near the end";
-	return seek(szSource, "$$", 0) == 28;
+	return seek(szSource, "$$", 0) == 27;
 }
 
 bool render_basic_test()
@@ -36,9 +36,31 @@ bool render_basic_test()
 bool render_include_test()
 {
 	printf("Test: %s - ", __FUNCTION__);
-
 	zString szResult1 = read_file("test_tmpl2_result.html");
 	zString szResult2 = render("test_tmpl2.html", NULL);
+	bool bReturn = strcmp(szResult1, szResult2) == 0;
+	free(szResult1);
+	free(szResult2);
+	return bReturn;
+}
+
+bool render_show_block_test()
+{
+	printf("Test: %s - ", __FUNCTION__);
+	struct Param param1;
+	param1.m_szKey = "show_me";
+	param1.m_Val = (struct Value){ 2, (void*)&(struct BoolValue){true} };
+	param1.m_pNext = NULL;
+
+	struct Param param2;
+	param2.m_szKey = "hide_me";
+	param2.m_Val = (struct Value){ 2, (void*)&(struct BoolValue){false} };
+	param2.m_pNext = NULL;
+
+	param1.m_pNext = &param2;
+
+	zString szResult1 = read_file("test_tmpl3_result.html");
+	zString szResult2 = render("test_tmpl3.html", &param1);
 	bool bReturn = strcmp(szResult1, szResult2) == 0;
 	free(szResult1);
 	free(szResult2);
@@ -88,6 +110,7 @@ int main()
 	launch_test(read_file_test);
 	launch_test(render_basic_test);
 	launch_test(render_include_test);
-	launch_test(str_insert_test);
+	launch_test(render_show_block_test);
+	//launch_test(str_insert_test);
 	return 0;
 }

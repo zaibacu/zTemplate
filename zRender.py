@@ -11,6 +11,9 @@ class Value(Structure):
 class StringValue(Structure):
 	pass
 
+class BoolValue(Structure):
+	pass
+
 PARAM_P = POINTER(Param)
 
 Value._fields_ = [
@@ -20,6 +23,10 @@ Value._fields_ = [
 
 StringValue._fields_ = [
 	("value", c_char_p)
+]
+
+BoolValue._fields_ = [
+	("value", c_bool)
 ]
 
 Param._fields_ = [
@@ -49,12 +56,20 @@ class zRender(object):
 				pass
 			elif type(value) == dict:
 				pass
-			else:
+			elif type(value) == str:
 				sv = StringValue()
 				sv.value = value.encode("UTF-8")
 				self.Values.append(sv)
 				v.type = 1
 				v.val = cast(byref(sv), c_void_p)
+			elif type(value) == bool:
+				bv = BoolValue()
+				bv.value = value
+				self.Values.append(bv)
+				v.type = 2
+				v.val = cast(byref(bv), c_void_p)
+			else:
+				print("Unhandled type %s" % type(value))
 
 			p.value = v
 			cursor.next = PARAM_P(p)

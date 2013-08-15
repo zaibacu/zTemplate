@@ -5,6 +5,8 @@
 		<< $hello >>
 		<< $hello2 >>
 		<< include test2.html >>
-		<< $bye >>
+		[[ if $say_goodbye ]]
+			<< $bye >>
+		[[end]]
 	</body>
 </html> 
