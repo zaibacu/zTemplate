@@ -3,10 +3,12 @@
 	</head>
 	<body>
 		<< $hello >>
-		<< $hello2 >>
 		<< include test2.html >>
 		[[ if $say_goodbye ]]
 			<< $bye >>
+		[[end]]
+		[[ foreach $n in $some_numbers ]]
+			<< $n >>
 		[[end]]
 	</body>
 </html> 

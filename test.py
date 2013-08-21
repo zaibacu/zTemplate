@@ -4,6 +4,6 @@ r = zRender()
 
 print(r.render("test3.html", {	"bye": "Goodbye, cruel world...", 
 								"hello": "Hello world!", 
-								"hello2": "Hello world2!",
-								"say_goodbye": True
+								"say_goodbye": True,
+								"some_numbers": [ 5, 4, "three", "two", "one!" ]
 								}))

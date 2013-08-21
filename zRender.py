@@ -14,7 +14,15 @@ class StringValue(Structure):
 class BoolValue(Structure):
 	pass
 
+class NumberValue(Structure):
+	pass
+
+class ListValue(Structure):
+	pass
+
 PARAM_P = POINTER(Param)
+VALUE_P = POINTER(Value)
+LIST_P = POINTER(ListValue)
 
 Value._fields_ = [
 	("type", c_uint),
@@ -29,9 +37,18 @@ BoolValue._fields_ = [
 	("value", c_bool)
 ]
 
+NumberValue._fields_ = [
+	("value", c_int)
+]
+
+ListValue._fields_ = [
+	("value", VALUE_P),
+	("next", LIST_P)
+]
+
 Param._fields_ = [
 		("key", c_char_p),
-		("value", Value),
+		("value", VALUE_P),
 		("next", PARAM_P)
 	]
 
@@ -44,34 +61,57 @@ class zRender(object):
 		self.lib.render.restype = c_char_p
 		self.lib.render.argtype = [c_char_p, PARAM_P]
 
+	def handle_type(self, value):
+		v = Value()
+		if type(value) == list:
+			v.type = 4
+			rev = value[:]
+			rev.reverse()
+			prev_item = None
+			for item in rev:
+				lv = ListValue()
+				self.Values.append(lv)
+				lv.value = VALUE_P(self.handle_type(item))
+				if prev_item != None:
+					lv.next = LIST_P(prev_item)
+				prev_item = lv
+
+			v.val = cast(byref(lv), c_void_p)
+
+		elif type(value) == dict:
+			pass
+		elif type(value) == str:
+			sv = StringValue()
+			sv.value = value.encode("UTF-8")
+			self.Values.append(sv)
+			v.type = 1
+			v.val = cast(byref(sv), c_void_p)
+		elif type(value) == bool:
+			bv = BoolValue()
+			bv.value = value
+			self.Values.append(bv)
+			v.type = 2
+			v.val = cast(byref(bv), c_void_p)
+		elif type(value) == int:
+			nv = NumberValue()
+			nv.value = value
+			self.Values.append(nv)
+			v.type = 3
+			v.val = cast(byref(nv), c_void_p)
+		else:
+			print("Unhandled type %s" % type(value))
+
+		return v
+
 	def render(self, file, params = {}):
 		root = Param()
 		cursor = root
 		self.Values = [] #Just to keep our value structs not destroyed
 		for key, value in params.items():
-			v = Value()
 			p = Param()
 			p.key = key.encode("UTF-8")
-			if type(value) == list:
-				pass
-			elif type(value) == dict:
-				pass
-			elif type(value) == str:
-				sv = StringValue()
-				sv.value = value.encode("UTF-8")
-				self.Values.append(sv)
-				v.type = 1
-				v.val = cast(byref(sv), c_void_p)
-			elif type(value) == bool:
-				bv = BoolValue()
-				bv.value = value
-				self.Values.append(bv)
-				v.type = 2
-				v.val = cast(byref(bv), c_void_p)
-			else:
-				print("Unhandled type %s" % type(value))
-
-			p.value = v
+			v = self.handle_type(value)
+			p.value = VALUE_P(v)
 			cursor.next = PARAM_P(p)
 			cursor = p
 			
