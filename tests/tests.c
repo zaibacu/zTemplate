@@ -33,6 +33,24 @@ bool render_basic_test()
 	return bReturn;
 }
 
+bool render_basic_unicode_test()
+{
+	printf("Test: %s - ", __FUNCTION__);
+
+	struct Param param1;
+	param1.m_szKey = "random_letters";
+	param1.m_pVal = &(struct Value){ 1, (void*)&(struct StringValue){"ąčęėįšųūž„“"} };
+	param1.m_pNext = NULL;
+
+
+	zString szResult1 = read_file("unicode_test_tmpl1_result.html");
+	zString szResult2 = render("unicode_test_tmpl1.html", &param1);
+	bool bReturn = strcmp(szResult1, szResult2) == 0;
+	free(szResult1);
+	free(szResult2);
+	return bReturn;
+}
+
 bool render_include_test()
 {
 	printf("Test: %s - ", __FUNCTION__);
@@ -119,6 +137,14 @@ bool read_file_test()
 	return true;
 }
 
+bool read_file_unicode_test()
+{
+	printf("Test: %s - ", __FUNCTION__);
+	zString szResult = read_file("unicode_test_tmpl1.html");
+	free(szResult);
+	return true;
+}
+
 bool str_insert_test()
 {
 	printf("Test: %s - ", __FUNCTION__);
@@ -142,7 +168,9 @@ int main()
 	launch_test(seek_test);
 	launch_test(trim_test);
 	launch_test(read_file_test);
+	launch_test(read_file_unicode_test);
 	launch_test(render_basic_test);
+	launch_test(render_basic_unicode_test);
 	launch_test(render_include_test);
 	launch_test(render_show_block_test);
 	launch_test(render_foreach_block_test);
