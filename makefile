@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-fPIC -m64 -std=c99
+CFLAGS=-fPIC -m64 -std=c99 
 BIN=bin
 INCLUDE=-include src/precompiled/includes.h
 
