@@ -108,11 +108,20 @@ class zRender(object):
 		cursor = root
 		self.Values = [] #Just to keep our value structs not destroyed
 		for key, value in params.items():
-			p = Param()
-			p.key = key.encode("UTF-8")
-			v = self.handle_type(value)
-			p.value = VALUE_P(v)
-			cursor.next = PARAM_P(p)
-			cursor = p
+			if type(value) == dict:
+				for name, member in value.items():
+					p = Param()
+					p.key = ("%s->%s" % (key, name)).encode("UTF-8")
+					v = self.handle_type(member)
+					p.value = VALUE_P(v)
+					cursor.next = PARAM_P(p)
+					cursor = p
+			else:
+				p = Param()
+				p.key = key.encode("UTF-8")
+				v = self.handle_type(value)
+				p.value = VALUE_P(v)
+				cursor.next = PARAM_P(p)
+				cursor = p
 			
 		return self.lib.render(file.encode("UTF-8"), byref(root))
