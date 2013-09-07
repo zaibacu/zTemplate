@@ -154,6 +154,15 @@ bool str_insert_test()
 	return strcmp(szStr1, "Hello beautiful world!") == 0;
 }
 
+bool regex_basic_test()
+{
+	printf("Test: %s - ", __FUNCTION__);
+	zString szResult = regex("$\\w+\\s?\\d*", "<< $Hello1 23 >>");
+	bool bReturn = strcmp(szResult, "$Hello1 23") == 0;
+	free(szResult);
+	return bReturn;
+}
+
 void launch_test(bool (*f)(void))
 {
 	if((*f)() == true)
@@ -175,5 +184,6 @@ int main()
 	launch_test(render_show_block_test);
 	launch_test(render_foreach_block_test);
 	launch_test(str_insert_test);
+	launch_test(regex_basic_test);
 	return 0;
 }

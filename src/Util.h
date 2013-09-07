@@ -9,3 +9,28 @@ bool str_remove(zString p_szSource, const unsigned long p_culStart, const unsign
 bool str_remove_tag(zString p_szSource, const zString p_cszRemove);
 
 long get_or_default(const long p_clValue, const long p_clDefault);
+
+
+//Regex stuff
+enum ERegexType
+{
+	eRoot = 0,
+	eConstant = 1,
+	eAlpha = 2,
+	eNumeric = 3,
+	eWhiteSpace = 4,
+	eDot = 5,
+};
+
+struct RegexState
+{
+	enum ERegexType m_eRegexType;
+	void* m_pState;
+	void* m_pNext;
+	bool m_bRepeat;
+	bool m_bCanSkip;
+	bool (*f)(struct RegexState*, char);
+	char m_chExpr;
+};
+
+zString regex(const zString p_cszPattern, const zString p_cszText);
