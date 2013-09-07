@@ -349,6 +349,23 @@ zString render_block(zString p_szBuffer, struct Param* p_pParameters)
 	return p_szBuffer;
 }
 
+void handle_block(struct Block* p_pBlock, struct Param* p_pParameters, zString p_szBuffer)
+{
+	zString szResult = (zString)calloc(sizeof(zString), 1024);
+	while(BM.m_bCondition)
+	{
+		zString szRenderBuff = (zString)malloc(sizeof(zString) * strlen(p_pBlock->m_szBlock));
+		strcpy(szRenderBuff, p_pBlock->m_szBlock);
+	 	strcat(szResult, render_block(szRenderBuff, p_pParameters));
+	 	step_BM();
+	 	free(szRenderBuff);
+	}
+	str_insert(p_szBuffer, szResult, p_pBlock->m_ulHeaderStart, p_pBlock->m_ulFooterEnd);
+	free(p_pBlock->m_szBlock);
+	free(p_pBlock);
+	free(szResult);
+}
+
 zString render(const zString p_cszTemplate, struct Param* p_pParameters)
 {
 	zString szBuffer = read_file(p_cszTemplate);
@@ -356,24 +373,8 @@ zString render(const zString p_cszTemplate, struct Param* p_pParameters)
 	struct Block* pBlock = NULL;
 	while((pBlock = seek_block(szBuffer, ulBlockPos, p_pParameters)) != NULL)
 	{
-		zString szResult = (zString)calloc(sizeof(zString), 1024);
-		while(BM.m_bCondition)
-		{
-			zString szRenderBuff = (zString)malloc(sizeof(zString) * strlen(pBlock->m_szBlock));
-			strcpy(szRenderBuff, pBlock->m_szBlock);
-		 	strcat(szResult, render_block(szRenderBuff, p_pParameters));
-		 	step_BM();
-		 	free(szRenderBuff);
-		}
-		str_insert(szBuffer, szResult, pBlock->m_ulHeaderStart, pBlock->m_ulFooterEnd);
-		free(pBlock->m_szBlock);
-		free(pBlock);
-		free(szResult);
+		handle_block(pBlock, p_pParameters, szBuffer);
 	}
-	//Do last, full page render
-	zString szResult = render_block(szBuffer, p_pParameters);
-	str_insert(szBuffer, szResult, 0, strlen(szResult));
-	//printf("Result: %s\n", szBuffer);
 	clean_BM();
 	return szBuffer;
 }
