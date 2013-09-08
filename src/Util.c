@@ -56,7 +56,7 @@ zString read_file(const zString p_cszName)
 
 long seek(const zString p_cszSource, const zString p_cszPattern, const unsigned long p_culStart)
 {
-	if(p_cszSource == NULL)
+	if(p_cszSource == NULL || p_cszPattern == NULL)
 		return -1;
 
 	zString szResult = strstr(p_cszSource + p_culStart, p_cszPattern);

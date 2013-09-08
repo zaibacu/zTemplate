@@ -41,6 +41,18 @@ struct Param
 };
 
 
+struct BlockMemory
+{
+	long m_lCurValue;
+	long m_lLine;
+	bool m_bOdd;
+	bool m_bEven;
+	struct Param* m_pLocal;
+	struct Value* m_pLineValue;
+	struct Value* m_pOddValue;
+	struct Value* m_pEvenValue;
+	bool m_bCondition;
+};
 
 struct Block
 {
@@ -55,6 +67,8 @@ struct Block
 	unsigned long m_ulEnd;
 	
 	zString m_szBlock;
+
+	struct BlockMemory m_BM;
 };
 
 //Prototypes

@@ -2,55 +2,52 @@
 #include "Util.h"
 
 //Block memory handling
-static struct BlockMemory
-{
-	long m_lCurValue;
-	long m_lLine;
-	bool m_bOdd;
-	bool m_bEven;
-	struct Param* m_pLocal;
-	bool m_bCondition;
-} BM;
 
-void clean_BM()
+void clean_BM(struct BlockMemory* p_pBM)
 {
-	BM.m_lLine = 0;
-	BM.m_bEven = true;
-	BM.m_bOdd = false;
-	BM.m_bCondition = false;
-	if(BM.m_pLocal != NULL)
+	if(p_pBM == NULL)
+		return; 
+
+	p_pBM->m_lLine = 0;
+	p_pBM->m_bEven = true;
+	p_pBM->m_bOdd = false;
+	p_pBM->m_bCondition = false;
+	if(p_pBM->m_pLocal != NULL)
 	{
-		if(BM.m_pLocal->m_pVal != NULL)
+		if(p_pBM->m_pLocal->m_pVal != NULL)
 		{
-			BM.m_pLocal->m_pVal->m_pValue ? free(BM.m_pLocal->m_pVal->m_pValue) : false;
-			free(BM.m_pLocal->m_pVal);
+			p_pBM->m_pLocal->m_pVal->m_pValue ? free(p_pBM->m_pLocal->m_pVal->m_pValue) : false;
+			free(p_pBM->m_pLocal->m_pVal);
 		}
-		free(BM.m_pLocal->m_szKey);
-		free(BM.m_pLocal);
+		free(p_pBM->m_pLocal->m_szKey);
+		free(p_pBM->m_pLocal);
 	}
-	BM.m_pLocal = NULL;
+	p_pBM->m_pLocal = NULL;
 }
 
-void step_BM()
+void step_BM(struct BlockMemory* p_pBM)
 {
-	BM.m_lLine++;
-	BM.m_bEven = !BM.m_bEven;
-	BM.m_bOdd = !BM.m_bOdd;
-	if(BM.m_pLocal && BM.m_pLocal->m_pVal->m_uiType == 4)
+	if(p_pBM == NULL)
+		return; 
+
+	p_pBM->m_lLine++;
+	p_pBM->m_bEven = !p_pBM->m_bEven;
+	p_pBM->m_bOdd = !p_pBM->m_bOdd;
+	if(p_pBM->m_pLocal != NULL && p_pBM->m_pLocal->m_pVal != NULL && p_pBM->m_pLocal->m_pVal->m_uiType == 4)
 	{
-		if(BM.m_pLocal->m_pVal->m_pValue != NULL)
+		if(p_pBM->m_pLocal->m_pVal->m_pValue != NULL)
 		{
-			BM.m_pLocal->m_pVal->m_pValue = (void*)((struct ListValue*)BM.m_pLocal->m_pVal->m_pValue)->m_pNext;
-			BM.m_bCondition = true;
+			p_pBM->m_pLocal->m_pVal->m_pValue = (void*)((struct ListValue*)p_pBM->m_pLocal->m_pVal->m_pValue)->m_pNext;
+			p_pBM->m_bCondition = true;
 		}
 		else
 		{
-			BM.m_bCondition = false;
+			p_pBM->m_bCondition = false;
 		}
 	}
 	else
 	{
-		BM.m_bCondition = false;
+		p_pBM->m_bCondition = false;
 	}
 }
 //Other stuff
@@ -78,20 +75,40 @@ zString pull_param_name(const zString p_cszSource, long* p_pPos)
 	return NULL;
 }
 
+struct Value* search_block_parameter(struct BlockMemory* p_pBM, const zString p_cszName)
+{
+	if(strcmp(p_cszName, "even") == 0)
+	{
+		p_pBM->m_pEvenValue = &(struct Value){ 2, (void*)&(struct BoolValue){p_pBM->m_bEven} };
+		return p_pBM->m_pEvenValue;
+	}
+	else if(strcmp(p_cszName, "odd") == 0)
+	{
+		p_pBM->m_pOddValue = &(struct Value){ 2, (void*)&(struct BoolValue){p_pBM->m_bOdd} };
+		return p_pBM->m_pOddValue;
+	}
+	else if(strcmp(p_cszName, "line") == 0)
+	{
+		p_pBM->m_pLineValue = &(struct Value){ 3, (void*)&(struct NumberValue){p_pBM->m_lLine} };
+		return p_pBM->m_pLineValue;
+	}
+	else if(p_pBM->m_pLocal && strcmp(p_cszName, p_pBM->m_pLocal->m_szKey) == 0)
+	{
+		if(p_pBM->m_pLocal->m_pVal->m_uiType == 4 && p_pBM->m_pLocal->m_pVal->m_pValue != NULL)
+		{
+			return (struct Value*)((struct ListValue*)p_pBM->m_pLocal->m_pVal->m_pValue)->m_pVal;
+		}
+		else
+			return p_pBM->m_pLocal->m_pVal;
+	}
+
+	return NULL;
+}
+
 struct Value* search_parameter(struct Param* p_pParameters, const zString p_cszName)
 {
 	if(p_pParameters == NULL || p_cszName == NULL)
 		return NULL;
-
-	if(BM.m_pLocal && strcmp(p_cszName, BM.m_pLocal->m_szKey) == 0)
-	{
-		if(BM.m_pLocal->m_pVal->m_uiType == 4 && BM.m_pLocal->m_pVal->m_pValue != NULL)
-		{
-			return (struct Value*)((struct ListValue*)BM.m_pLocal->m_pVal->m_pValue)->m_pVal;
-		}
-		else
-			return BM.m_pLocal->m_pVal;
-	}
 
 	struct Param* pPtr = p_pParameters;
 	while(pPtr != NULL)
@@ -110,13 +127,6 @@ struct Value* search_parameter(struct Param* p_pParameters, const zString p_cszN
 //Returns pointer to value
 bool* search_parameter_bool(struct Param* p_pParameters, const zString p_cszName)
 {
-	//Special parameters
-	if(p_cszName == "odd")
-		return &BM.m_bOdd;
-
-	if(p_cszName == "even")
-		return &BM.m_bEven;
-
 	struct Value* pParameter = search_parameter(p_pParameters, p_cszName);
 	if(pParameter != NULL && pParameter->m_uiType == 2)
 	{
@@ -128,10 +138,6 @@ bool* search_parameter_bool(struct Param* p_pParameters, const zString p_cszName
 
 long* search_parameter_number(struct Param* p_pParameters, const zString p_cszName)
 {
-	//Special parameter
-	if(p_cszName == "line")
-		return &BM.m_lLine;
-
 	struct Value* pParameter = search_parameter(p_pParameters, p_cszName);
 	if(pParameter != NULL)
 	{
@@ -230,19 +236,18 @@ void eval_block(struct Block* p_pBlock, zString p_szExpression, struct Param* p_
 					zString szFirst = pull_param_name(szExp, &lPosPtr);
 					zString szSecond = pull_param_name(szExp, &lPosPtr);
 					bEvaluated = true;
-					clean_BM();
-					BM.m_pLocal = (struct Param*)malloc(sizeof(struct Param));
-					BM.m_pLocal->m_szKey = (zString)malloc(sizeof(zString) * (strlen(szFirst) + 1));
-					strcpy(BM.m_pLocal->m_szKey, szFirst);
+					p_pBlock->m_BM.m_pLocal = (struct Param*)malloc(sizeof(struct Param));
+					p_pBlock->m_BM.m_pLocal->m_szKey = (zString)malloc(sizeof(zString) * (strlen(szFirst) + 1));
+					strcpy(p_pBlock->m_BM.m_pLocal->m_szKey, szFirst);
 					struct Value* pParam = search_parameter(p_pParameters, szSecond);
 					if(pParam && pParam->m_uiType == 4)
 					{
-						BM.m_pLocal->m_pVal = (struct Value*)malloc(sizeof(struct Value));
-						BM.m_pLocal->m_pVal->m_uiType = 4;
-						BM.m_pLocal->m_pVal->m_pValue = malloc(sizeof(struct ListValue));
-						((struct ListValue*)BM.m_pLocal->m_pVal->m_pValue)->m_pVal = ((struct ListValue*)pParam->m_pValue)->m_pVal;
-						((struct ListValue*)BM.m_pLocal->m_pVal->m_pValue)->m_pNext = ((struct ListValue*)pParam->m_pValue)->m_pNext;
-						BM.m_bCondition = true;
+						p_pBlock->m_BM.m_pLocal->m_pVal = (struct Value*)malloc(sizeof(struct Value));
+						p_pBlock->m_BM.m_pLocal->m_pVal->m_uiType = 4;
+						p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue = malloc(sizeof(struct ListValue));
+						((struct ListValue*)p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue)->m_pVal = ((struct ListValue*)pParam->m_pValue)->m_pVal;
+						((struct ListValue*)p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue)->m_pNext = ((struct ListValue*)pParam->m_pValue)->m_pNext;
+						p_pBlock->m_BM.m_bCondition = true;
 					}
 					free(szFirst);
 					free(szSecond);
@@ -255,9 +260,8 @@ void eval_block(struct Block* p_pBlock, zString p_szExpression, struct Param* p_
 				if(lStart != -1)
 				{
 					bEvaluated = true;
-					clean_BM();
 					zString szParamName = pull_param_name(szExp, &lStart);
-					BM.m_bCondition = *search_parameter_bool(p_pParameters, szParamName);
+					p_pBlock->m_BM.m_bCondition = *search_parameter_bool(p_pParameters, szParamName);
 					free(szParamName);
 				}
 			}
@@ -270,7 +274,7 @@ void eval_block(struct Block* p_pBlock, zString p_szExpression, struct Param* p_
 	free(p_szExpression);
 }
 
-zString interpret(zString p_szSource, struct Param* p_pParameters)
+zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockMemory* p_pBM)
 {
 	p_szSource = trim(p_szSource);
 	//Guessing this is include
@@ -290,17 +294,47 @@ zString interpret(zString p_szSource, struct Param* p_pParameters)
 		long lStart = seek(p_szSource, "$", 0);
 		if(lStart != -1)
 		{
+			zString szResult = (zString)malloc(sizeof(zString) * 10 /* Let's assume this is enough space... */);
 			//Now search for key
-			zString szResult = search_parameter_str(p_pParameters, p_szSource + lStart + 1);
-			if(szResult == NULL)
+			struct Value* pValue = p_pBM != NULL ? search_block_parameter(p_pBM, p_szSource + lStart + 1) : NULL;
+			if(pValue != NULL)
 			{
-				long* pResult = search_parameter_number(p_pParameters, p_szSource + lStart + 1);
-				if(pResult != NULL)
+				if(pValue->m_uiType == 1)
 				{
-					szResult = (zString)malloc(sizeof(zString) * 10 /* Let's assume this is enough space... */);
-					sprintf(szResult, "%d\0", *pResult);
+					//We want to return a copy instead of pointer to string
+					const zString cszValue = ((struct StringValue*)pValue->m_pValue)->m_szValue;
+					if(cszValue != NULL)
+					{
+						const unsigned long culSize = strlen(cszValue);
+						free(szResult);
+						szResult = (zString)malloc(sizeof(zString) * (culSize + 1));
+						memcpy(szResult, cszValue, culSize);
+						szResult[culSize] = '\0';
+					}
+				}
+				else if(pValue->m_uiType == 2)
+				{
+					sprintf(szResult, "%d\0", ((struct BoolValue*)pValue->m_pValue)->m_bValue);
+				}
+				else if(pValue->m_uiType == 3)
+				{
+					sprintf(szResult, "%d\0", ((struct NumberValue*)pValue->m_pValue)->m_lValue);
 				}
 			}
+			else
+			{
+				szResult = search_parameter_str(p_pParameters, p_szSource + lStart + 1);
+				if(szResult == NULL)
+				{
+					long* pResult = search_parameter_number(p_pParameters, p_szSource + lStart + 1);
+					if(pResult != NULL)
+					{
+						sprintf(szResult, "%d\0", *pResult);
+					}
+				}
+			}
+
+			
 			free(p_szSource);
 			return szResult;
 		}
@@ -310,7 +344,7 @@ zString interpret(zString p_szSource, struct Param* p_pParameters)
 	return "";
 }
 
-zString render_block(zString p_szBuffer, struct Param* p_pParameters)
+zString render_block(zString p_szBuffer, struct Param* p_pParameters, struct BlockMemory* p_pBM)
 {
 	long lStart = 0;
 	long lEnd = 0;
@@ -335,7 +369,7 @@ zString render_block(zString p_szBuffer, struct Param* p_pParameters)
 		memcpy(chTempBuff, p_szBuffer + lStart + uiStLen, lTagSize);
 		chTempBuff[lTagSize] = '\0';
 
-		zString szResult = interpret(chTempBuff, p_pParameters);
+		zString szResult = interpret(chTempBuff, p_pParameters, p_pBM);
 		
 		//Insert result
 		str_insert(p_szBuffer, szResult, lStart, lEnd + uiEnLen);
@@ -351,15 +385,19 @@ zString render_block(zString p_szBuffer, struct Param* p_pParameters)
 
 void handle_block(struct Block* p_pBlock, struct Param* p_pParameters, zString p_szBuffer)
 {
+	if(p_pBlock == NULL)
+		return;
+
 	zString szResult = (zString)calloc(sizeof(zString), 1024);
-	while(BM.m_bCondition)
+	while(p_pBlock->m_BM.m_bCondition)
 	{
 		zString szRenderBuff = (zString)malloc(sizeof(zString) * strlen(p_pBlock->m_szBlock));
 		strcpy(szRenderBuff, p_pBlock->m_szBlock);
-	 	strcat(szResult, render_block(szRenderBuff, p_pParameters));
-	 	step_BM();
+	 	strcat(szResult, render_block(szRenderBuff, p_pParameters, &p_pBlock->m_BM));
+	 	step_BM(&p_pBlock->m_BM);
 	 	free(szRenderBuff);
 	}
+	clean_BM(&p_pBlock->m_BM);
 	str_insert(p_szBuffer, szResult, p_pBlock->m_ulHeaderStart, p_pBlock->m_ulFooterEnd);
 	free(p_pBlock->m_szBlock);
 	free(p_pBlock);
@@ -375,6 +413,6 @@ zString render(const zString p_cszTemplate, struct Param* p_pParameters)
 	{
 		handle_block(pBlock, p_pParameters, szBuffer);
 	}
-	clean_BM();
+	render_block(szBuffer, p_pParameters, NULL);
 	return szBuffer;
 }
