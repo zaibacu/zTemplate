@@ -74,7 +74,6 @@ long seek_back(const zString p_cszSource, const zString p_cszPattern, const unsi
 
 	long lLast_index = -1;
 	long lOffset = 0;
-	zString szResult = NULL;
 	while(true)
 	{
 		lOffset = seek(p_cszSource, p_cszPattern, lOffset);
@@ -136,6 +135,28 @@ long get_or_default(const long p_clValue, const long p_clDefault)
 	return p_clValue;
 }
 
+zString pull_param_name(const zString p_cszSource, long* p_pPos)
+{
+	long lStart = seek(p_cszSource, "$", *p_pPos);
+	if(lStart != -1)
+	{
+		*p_pPos = lStart;
+		long lEnd = seek(p_cszSource, " ", *p_pPos);
+		if(lEnd != -1)
+			*p_pPos = lEnd;
+		else
+			*p_pPos = strlen(p_cszSource);
+
+		unsigned long ulSize = *p_pPos - lStart - 1;
+		zString chBuff = (zString)malloc(sizeof(zString) * (ulSize + 1));
+		memcpy(chBuff, p_cszSource + lStart + 1, ulSize);
+		chBuff[ulSize] = '\0';
+		return chBuff;
+	}
+
+	return NULL;
+}
+
 //Regex stuff
 
 //Eval functions
@@ -173,8 +194,7 @@ struct RegexState* compile_regex(const zString p_cszPattern)
 {
 	if(p_cszPattern == NULL)
 		return NULL;
-
-	bool bRoot = true;
+	
 	struct RegexState* pRoot = (struct RegexState*)malloc(sizeof(struct RegexState));
 	pRoot->m_eRegexType = eRoot;
 	struct RegexState* pPrev = pRoot;

@@ -123,5 +123,5 @@ class zRender(object):
 				p.value = VALUE_P(v)
 				cursor.next = PARAM_P(p)
 				cursor = p
-			
+				
 		return self.lib.render(file.encode("UTF-8"), byref(root))

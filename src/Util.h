@@ -10,6 +10,7 @@ bool str_remove_tag(zString p_szSource, const zString p_cszRemove);
 
 long get_or_default(const long p_clValue, const long p_clDefault);
 
+zString pull_param_name(const zString p_cszSource, long* p_pPos);
 
 //Regex stuff
 enum ERegexType

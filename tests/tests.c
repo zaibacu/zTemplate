@@ -1,5 +1,6 @@
 #include "../src/zCore.h"
 #include "../src/Util.h"
+#include "../src/Parameter.h"
 
 bool seek_test()
 {

@@ -1,7 +1,9 @@
 CC=gcc
-CFLAGS=-fPIC -m64 -std=c99 
-BIN=bin
+CFLAGS=-m64 -std=c99 -fpic -Wall
+LDFLAGS=
 INCLUDE=-include src/precompiled/includes.h
+SRC = Block.c Parameter.c Util.c zCore.c
+OBJ = bin/Block.o bin/Parameter.o bin/Util.o bin/zCore.o
 
 ifeq ($(OS),Windows_NT)
     #Windows stuff
@@ -13,15 +15,19 @@ else
     TESTS=tests/tests.o
 endif
 
-all: compile
-	
-compile:
-	$(CC) $(CFLAGS) -o $(BIN)/$(LIBRARY) -DTEMPLATE_DIR=\"tmpl/\" -shared src/*.c $(INCLUDE)
+all: $(LIBRARY)
+
+$(LIBRARY): $(OBJ)
+	$(CC) -o bin/$(LIBRARY) $(LDFLAGS) -shared $(OBJ)
+
+bin/%.o:
+	$(CC) -g3 -o bin/$*.o $(CFLAGS) $(INCLUDE) -DTEMPLATE_DIR=\"tmpl/\" -c src/$*.c
+
+rebuild: clean all
 
 test:
-	$(CC) -g3 $(CFLAGS) -o $(TESTS) $(CFLAGS) -DTEMPLATE_DIR=\"tests/\" src/*.c tests/tests.c $(INCLUDE)
+	$(CC) -g3 $(CFLAGS) -o $(TESTS) -DTEMPLATE_DIR=\"tests/\" src/*.c tests/tests.c $(INCLUDE)
 	./$(TESTS)
 
 clean:
-	rm bin/*.so
-	rm tests/*.o
+	rm -rf bin/*.o
