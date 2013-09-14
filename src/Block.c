@@ -148,6 +148,8 @@ void eval_block(struct Block* p_pBlock, zString p_szExpression, struct Param* p_
 					long lPosPtr = lStart + 7;
 					zString szFirst = pull_param_name(szExp, &lPosPtr);
 					zString szSecond = pull_param_name(szExp, &lPosPtr);
+					if(szFirst == NULL || szSecond == NULL)
+						return;
 					bEvaluated = true;
 					p_pBlock->m_BM.m_pLocal = (struct Param*)calloc(1, sizeof(struct Param));
 					p_pBlock->m_BM.m_pLocal->m_szKey = (zString)malloc(sizeof(zString) * (strlen(szFirst) + 1));
@@ -175,6 +177,7 @@ void eval_block(struct Block* p_pBlock, zString p_szExpression, struct Param* p_
 					bEvaluated = true;
 					zString szParamName = pull_param_name(szExp, &lStart);
 					p_pBlock->m_BM.m_bCondition = *search_parameter_bool(p_pParameters, szParamName);
+					p_pBlock->m_BM.m_pLocal = NULL;
 					free(szParamName);
 				}
 			}

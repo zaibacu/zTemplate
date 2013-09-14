@@ -21,7 +21,7 @@ $(LIBRARY): $(OBJ)
 	$(CC) -o bin/$(LIBRARY) $(LDFLAGS) -shared $(OBJ)
 
 bin/%.o:
-	$(CC) -g3 -o bin/$*.o $(CFLAGS) $(INCLUDE) -DTEMPLATE_DIR=\"tmpl/\" -c src/$*.c
+	$(CC) -o bin/$*.o $(CFLAGS) $(INCLUDE) -DTEMPLATE_DIR=\"tmpl/\" -c src/$*.c
 
 rebuild: clean all
 
