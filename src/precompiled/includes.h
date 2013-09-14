@@ -13,3 +13,8 @@
 #define BLOCK_ENTRY "[["
 #define BLOCK_EXIT "]]"
 #define BLOCK_END "[[end]]"
+
+#define DEBUG(level, fmt, ...) \
+	if(DEBUG_LEVEL >= level) \
+		fprintf(stderr, fmt, __VA_ARGS__)
+

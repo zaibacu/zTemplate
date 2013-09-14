@@ -63,7 +63,7 @@ zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockM
 				}
 			}
 
-			
+			DEBUG(2, "Statement '%s' interpretation result is '%s'\n", p_szSource, szResult);
 			free(p_szSource);
 			return szResult;
 		}
@@ -83,5 +83,6 @@ zString render(const zString p_cszTemplate, struct Param* p_pParameters)
 		handle_block(pBlock, p_pParameters, szBuffer);
 	}
 	render_block(szBuffer, p_pParameters, NULL);
+	DEBUG(1, "Rendering result: %s\n", szBuffer);
 	return szBuffer;
 }
