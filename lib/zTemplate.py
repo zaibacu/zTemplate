@@ -52,7 +52,7 @@ Param._fields_ = [
 		("next", PARAM_P)
 	]
 
-class zRender(object):
+class zTemplate(object):
 	def __init__(self):
 		if platform.system() == "Windows":
 			self.lib = cdll.LoadLibrary("bin/zRender.dll")

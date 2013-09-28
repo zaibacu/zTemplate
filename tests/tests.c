@@ -184,7 +184,6 @@ void launch_test(bool (*f)(void))
 
 int main()
 {
-	printf("Running tests:\n");
 	launch_test(seek_test);
 	launch_test(trim_test);
 	launch_test(read_file_test);

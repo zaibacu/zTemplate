@@ -1,6 +1,6 @@
-from zRender import *
+from lib.zTemplate import *
 
-r = zRender()
+r = zTemplate()
 
 print(r.render("test3.html", {	"bye": "Goodbye, cruel world...", 
 								"hello": "Hello world!", 
