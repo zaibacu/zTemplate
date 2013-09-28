@@ -155,3 +155,8 @@ zString pull_param_name(const zString p_cszSource, long* p_pPos)
 
 	return NULL;
 }
+
+zString pull_param(zString p_szSource)
+{
+	return p_szSource + 1;
+}

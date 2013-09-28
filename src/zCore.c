@@ -13,10 +13,10 @@ zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockM
 	{
 		bRegexLoaded = true;
 		reInclude = compile_regex("\\s*(include)\\s*(\\w+)");
-		reParam = compile_regex("[$]?(\\w+.\\w+)");
+		reParam = compile_regex("[$]?(\\w+)");
 	}
 	p_szSource = trim(p_szSource);
-	if(regex_test(reInclude, p_szSource, true))
+	if(regex_test(reInclude, p_szSource))
 	{
 		unsigned long ulLastIndex = 7;
 		zString szFileName = regex_search(reParam, p_szSource, &ulLastIndex, false);

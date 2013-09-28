@@ -2,6 +2,7 @@
 #include "Parameter.h"
 #include "zCore.h"
 #include "Util.h"
+#include "Regex.h"
 
 void clean_BM(struct BlockMemory* p_pBM)
 {
@@ -125,61 +126,66 @@ struct Block* seek_block(zString p_szSource, const unsigned long p_culStart, str
 	pBlock->m_szBlock = (zString)malloc(sizeof(zString) * (culBlockSize + 1));
 	memcpy(pBlock->m_szBlock, p_szSource + pBlock->m_ulStart, culBlockSize);
 	pBlock->m_szBlock[culBlockSize] = '\0';
-	//printf("\nBlock: '%s'\n", pBlock->m_szBlock);
+	DEBUG(3, "\nBlock: '%s'\n", pBlock->m_szBlock);
 	return pBlock;
 }
 
 void eval_block(struct Block* p_pBlock, zString p_szExpression, struct Param* p_pParameters)
 {
+	static bool bRegexLoaded = false;
+	static struct RegexState* reForeach;
+	static struct RegexState* reLogical;
+	static struct RegexState* reParam;
+	if(!bRegexLoaded)
+	{
+		bRegexLoaded = true;
+		reForeach = compile_regex("\\s*(foreach)\\s*($\\w+)\\s*(in)\\s*($\\w+)");
+		reLogical = compile_regex("\\s*(if)\\s*($\\w+)");
+		reParam = compile_regex("$\\w+");
+	}
+
 	if(strlen(p_szExpression) > 0)
 	{
-		bool bEvaluated = false;
 		zString pPtr = strtok(p_szExpression, ";"); //Handle multiple expressions
 		while(pPtr != NULL)
 		{
 			zString szExp = trim(pPtr);
-			bEvaluated = false;
 			//Possible for-each statement
-			if(!bEvaluated)
+			if(regex_test(reForeach, pPtr))
 			{
-				long lStart = seek(szExp, "foreach", 0);
-				if(lStart != -1)
+				unsigned long ulPosition = 0;
+				zString szFirst = regex_search(reParam, pPtr, &ulPosition, false);
+				zString szSecond = regex_search(reParam, pPtr, &ulPosition, false);
+				if(szFirst == NULL || szSecond == NULL)
 				{
-					long lPosPtr = lStart + 7;
-					zString szFirst = pull_param_name(szExp, &lPosPtr);
-					zString szSecond = pull_param_name(szExp, &lPosPtr);
-					if(szFirst == NULL || szSecond == NULL)
-						return;
-					bEvaluated = true;
-					p_pBlock->m_BM.m_pLocal = (struct Param*)calloc(1, sizeof(struct Param));
-					p_pBlock->m_BM.m_pLocal->m_szKey = (zString)malloc(sizeof(zString) * (strlen(szFirst) + 1));
-					strcpy(p_pBlock->m_BM.m_pLocal->m_szKey, szFirst);
-					struct Value* pParam = search_parameter(p_pParameters, szSecond);
-					if(pParam && pParam->m_uiType == 4)
-					{
-						p_pBlock->m_BM.m_pLocal->m_pVal = (struct Value*)malloc(sizeof(struct Value));
-						p_pBlock->m_BM.m_pLocal->m_pVal->m_uiType = 4;
-						p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue = malloc(sizeof(struct ListValue));
-						((struct ListValue*)p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue)->m_pVal = ((struct ListValue*)pParam->m_pValue)->m_pVal;
-						((struct ListValue*)p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue)->m_pNext = ((struct ListValue*)pParam->m_pValue)->m_pNext;
-						p_pBlock->m_BM.m_bCondition = true;
-					}
-					free(szFirst);
-					free(szSecond);
+					printf("Impossible has happened... Fix damn bugs in regex :) \n");
+					return;
 				}
+				p_pBlock->m_BM.m_pLocal = (struct Param*)calloc(1, sizeof(struct Param));
+				p_pBlock->m_BM.m_pLocal->m_szKey = (zString)malloc(sizeof(zString) * (strlen(pull_param(szFirst)) + 1));
+				strcpy(p_pBlock->m_BM.m_pLocal->m_szKey, pull_param(szFirst));
+				struct Value* pParam = search_parameter(p_pParameters, pull_param(szSecond));
+				if(pParam && pParam->m_uiType == 4)
+				{
+					p_pBlock->m_BM.m_pLocal->m_pVal = (struct Value*)malloc(sizeof(struct Value));
+					p_pBlock->m_BM.m_pLocal->m_pVal->m_uiType = 4;
+					p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue = malloc(sizeof(struct ListValue));
+					((struct ListValue*)p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue)->m_pVal = ((struct ListValue*)pParam->m_pValue)->m_pVal;
+					((struct ListValue*)p_pBlock->m_BM.m_pLocal->m_pVal->m_pValue)->m_pNext = ((struct ListValue*)pParam->m_pValue)->m_pNext;
+					p_pBlock->m_BM.m_bCondition = true;
+				}
+					
+				free(szFirst);
+				free(szSecond);
 			}
 			//Possible variable check statement
-			if(!bEvaluated)
+			if(regex_test(reLogical, pPtr))
 			{
-				long lStart = seek(szExp, "if", 0);
-				if(lStart != -1)
-				{
-					bEvaluated = true;
-					zString szParamName = pull_param_name(szExp, &lStart);
-					p_pBlock->m_BM.m_bCondition = *search_parameter_bool(p_pParameters, szParamName);
-					p_pBlock->m_BM.m_pLocal = NULL;
-					free(szParamName);
-				}
+				unsigned long ulPosition = 0;
+				zString szParamName = regex_search(reParam, pPtr, &ulPosition, false);
+				p_pBlock->m_BM.m_bCondition = *search_parameter_bool(p_pParameters, pull_param(szParamName));
+				p_pBlock->m_BM.m_pLocal = NULL;
+				free(szParamName);
 			}
 
 			free(szExp);
