@@ -2,23 +2,26 @@
 #include "Util.h"
 #include "Block.h"
 #include "Parameter.h"
+#include "Regex.h"
 
 zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockMemory* p_pBM)
 {
+	static bool bRegexLoaded = false;
 	static struct RegexState* reInclude;
-	if(!reInclude)
+	static struct RegexState* reParam;
+	if(!bRegexLoaded)
 	{
-		reInclude = compile_regex("\\s*(include)\\s*\\(w+)");
+		bRegexLoaded = true;
+		reInclude = compile_regex("\\s*(include)\\s*(\\w+)");
+		reParam = compile_regex("[$]?(\\w+.\\w+)");
 	}
-	//regex("\\s*(include)\\s*\\(w+)");
 	p_szSource = trim(p_szSource);
-	//Guessing this is include
-	//if(regex_test(reInclude, p_szSource))
+	if(regex_test(reInclude, p_szSource, true))
 	{
-		long lStart = seek(p_szSource, "include", 0);
-		if(lStart != -1)
+		unsigned long ulLastIndex = 7;
+		zString szFileName = regex_search(reParam, p_szSource, &ulLastIndex, false);
+		if(szFileName != NULL)
 		{
-			zString szFileName = trim(p_szSource + lStart + 7);
 			zString szResult = render(szFileName, p_pParameters);
 			free(szFileName);
 			free(p_szSource);
@@ -27,12 +30,13 @@ zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockM
 	}
 	//Guessing this is variable
 	{
-		long lStart = seek(p_szSource, "$", 0);
-		if(lStart != -1)
+		unsigned long ulLastIndex = 0;
+		zString szKey = regex_search(reParam, p_szSource, &ulLastIndex, false);
+		if(szKey != NULL)
 		{
 			zString szResult = (zString)malloc(sizeof(zString) * 10 /* Let's assume this is enough space... */);
 			//Now search for key
-			struct Value* pValue = p_pBM != NULL ? search_block_parameter(p_pBM, p_szSource + lStart + 1) : NULL;
+			struct Value* pValue = p_pBM != NULL ? search_block_parameter(p_pBM, szKey) : NULL;
 			if(pValue != NULL)
 			{
 				if(pValue->m_uiType == 1)
@@ -59,10 +63,10 @@ zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockM
 			}
 			else
 			{
-				szResult = search_parameter_str(p_pParameters, p_szSource + lStart + 1);
+				szResult = search_parameter_str(p_pParameters, szKey);
 				if(szResult == NULL)
 				{
-					long* pResult = search_parameter_number(p_pParameters, p_szSource + lStart + 1);
+					long* pResult = search_parameter_number(p_pParameters, szKey);
 					if(pResult != NULL)
 					{
 						sprintf(szResult, "%ld", *pResult);
@@ -71,13 +75,14 @@ zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockM
 			}
 
 			DEBUG(2, "Statement '%s' interpretation result is '%s'\n", p_szSource, szResult);
+			free(szKey);
 			free(p_szSource);
 			return szResult;
 		}
 	}
 	
 	free(p_szSource);
-	return "";
+	return NULL;
 }
 
 zString render(const zString p_cszTemplate, struct Param* p_pParameters)

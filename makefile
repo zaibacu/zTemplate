@@ -1,4 +1,4 @@
-DEBUG_LEVEL=3
+DEBUG_LEVEL=0
 ifeq ($(DEBUG_LEVEL), 0) #We don't want any debug flag here
 	DEBUG_FLAG = 
 else
@@ -8,8 +8,8 @@ CC=gcc
 CFLAGS=-m64 -std=c99 -fpic -Wall $(DEBUG_FLAG) -D DEBUG_LEVEL=$(DEBUG_LEVEL)
 LDFLAGS=
 INCLUDE=-include src/precompiled/includes.h
-SRC = Block.c Parameter.c Util.c zCore.c
-OBJ = bin/Block.o bin/Parameter.o bin/Util.o bin/zCore.o
+SRC = Block.c Parameter.c Util.c zCore.c Regex.c
+OBJ = bin/Block.o bin/Parameter.o bin/Util.o bin/zCore.o bin/Regex.o
 
 
 ifeq ($(OS),Windows_NT)

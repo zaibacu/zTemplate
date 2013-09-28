@@ -1,6 +1,7 @@
 #include "../src/zCore.h"
 #include "../src/Util.h"
 #include "../src/Parameter.h"
+#include "../src/Regex.h"
 
 bool seek_test()
 {
@@ -159,7 +160,6 @@ bool regex_basic_test()
 {
 	printf("Test: %s - ", __FUNCTION__);
 	zString szResult = regex("$\\w+\\s?\\d*", "<< $Hello1 23 >>");
-	printf("Result: '%s'\n", szResult);
 	bool bReturn = strcmp(szResult, "$Hello1 23") == 0;
 	free(szResult);
 	return bReturn;

@@ -217,12 +217,15 @@ zString render_block(zString p_szBuffer, struct Param* p_pParameters, struct Blo
 		chTempBuff[lTagSize] = '\0';
 
 		zString szResult = interpret(chTempBuff, p_pParameters, p_pBM);
+		if(szResult != NULL)
+		{
+			//Insert result
+			str_insert(p_szBuffer, szResult, lStart, lEnd + uiEnLen);
+			free(szResult);
+		}
+		else
+			str_insert(p_szBuffer, "", lStart, lEnd + uiEnLen);
 		
-		//Insert result
-		str_insert(p_szBuffer, szResult, lStart, lEnd + uiEnLen);
-
-		//Free memory
-		free(szResult);
 		free(chTempBuff);
 
 		lStart += ulResultLen - uiTagLen;
