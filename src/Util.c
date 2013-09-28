@@ -185,6 +185,19 @@ bool constant_state(struct RegexState* p_pCaller, char p_chArg)
 	return p_chArg == p_pCaller->m_chExpr;
 }
 
+bool class_state(struct RegexState* p_pCaller, char p_chArg)
+{
+	const unsigned long culSize = strlen(p_pCaller->m_szExpr);
+	unsigned long ulIndex = 0;
+	for(ulIndex = 0; ulIndex < culSize; ulIndex++)
+	{
+		if(p_pCaller->m_szExpr[ulIndex] == p_chArg)
+			return true;
+	}
+
+	return false;
+}
+
 bool regex_match(struct RegexState* p_pState, char p_chArg)
 {
 	return p_pState->f(p_pState, p_chArg);
@@ -200,10 +213,19 @@ struct RegexState* compile_regex(const zString p_cszPattern)
 	struct RegexState* pPrev = pRoot;
 	const unsigned long culLength = strlen(p_cszPattern);
 	unsigned long ulIndex = 0;
+	bool bClass = false;
+	unsigned long ulClassStart = 0;
 	for(ulIndex = 0; ulIndex < culLength; ulIndex++)
 	{
 		bool bRepeat = p_cszPattern[ulIndex + 1] == '+' ? true : false || p_cszPattern[ulIndex + 1] == '*' ? true : false;
 		bool bCanSkip = p_cszPattern[ulIndex + 1] == '*' ? true : false || p_cszPattern[ulIndex + 1] == '?' ? true : false;
+
+		if(bClass && p_cszPattern[ulIndex] != ']')
+		{
+			//These characters goes inside a class
+			continue;
+		}
+
 		//Search for alpha numeric character
 		if(p_cszPattern[ulIndex] == 'w' && p_cszPattern[ulIndex - 1] == '\\')
 		{
@@ -256,6 +278,34 @@ struct RegexState* compile_regex(const zString p_cszPattern)
 		{
 			//Just skip these command characters
 		}
+		else if(p_cszPattern[ulIndex] == '(' || p_cszPattern[ulIndex] == ')')
+		{
+			//Grouping symbols
+		}
+		else if(bClass == false && p_cszPattern[ulIndex] == '[')
+		{
+			bClass = true;
+			ulClassStart = ulIndex + 1;
+		}
+		else if(bClass == true && p_cszPattern[ulIndex] == ']')
+		{
+			bClass = false;
+			//We need to form a class
+			struct RegexState* pRegex = (struct RegexState*)malloc(sizeof(struct RegexState));
+			pRegex->m_eRegexType = eClass;
+			pRegex->m_bRepeat = bRepeat;
+			pRegex->m_bCanSkip = bCanSkip;
+			pRegex->f = &class_state;
+
+			const unsigned long culLength = ulIndex - 1 - ulClassStart;
+			pRegex->m_szExpr = (zString)malloc(sizeof(zString) * (culLength + 1));
+			strncpy(pRegex->m_szExpr, p_cszPattern + ulClassStart, culLength);
+			pRegex->m_szExpr[culLength] = '\0';
+
+			pRegex->m_pNext = NULL;
+			pPrev->m_pNext = pRegex;
+			pPrev = pRegex;
+		}
 		else //It is constant
 		{
 			struct RegexState* pRegex = (struct RegexState*)malloc(sizeof(struct RegexState));
@@ -272,16 +322,20 @@ struct RegexState* compile_regex(const zString p_cszPattern)
 	return (struct RegexState*)pRoot->m_pNext; //Ignore first element in list, becouse it is just a place holder
 }
 
-zString regex(const zString p_cszPattern, const zString p_cszText)
+zString regex_search(struct RegexState* p_pRegex, const zString p_cszText, unsigned long* p_pulLastIndex)
 {
-	struct RegexState* pRegex = compile_regex(p_cszPattern);
+	if(p_pRegex == NULL)
+		return NULL;
+
+	struct RegexState* pRegex = (struct RegexState*)malloc(sizeof(struct RegexState));
+	*pRegex = *p_pRegex;
 	const unsigned long culLength = strlen(p_cszText);
 	unsigned long ulIndex = 0, ulStart, ulEnd, ulMatched = 0;
 	bool bStarted = false;
 	for(ulIndex = 0; ulIndex < culLength; ulIndex++)
 	{
 		bool bMatch = regex_match(pRegex, p_cszText[ulIndex]);
-		//printf("State: %d Char:'%c' Matched? %d\n", pRegex->m_eRegexType, p_cszText[ulIndex], bMatch);
+		DEBUG(2, "State: %d Char:'%c' Matched? %d\n", pRegex->m_eRegexType, p_cszText[ulIndex], bMatch);
 		ulMatched += bMatch;
 		if(!bMatch && !bStarted) //Just ignore at this point
 			continue;
@@ -294,7 +348,6 @@ zString regex(const zString p_cszPattern, const zString p_cszText)
 
 		if(!bMatch)
 		{
-			
 			if(pRegex && ((!bMatch && ulMatched > 0) || (!bMatch && ulMatched == 0 && pRegex->m_bCanSkip)))
 			{
 				pRegex = (struct RegexState*)pRegex->m_pNext;
@@ -312,18 +365,39 @@ zString regex(const zString p_cszPattern, const zString p_cszText)
 			pRegex = (struct RegexState*)pRegex->m_pNext;
 			ulMatched = 0;
 		}
-
-		if(pRegex == NULL) //We end when there is no more regex left
+		if(pRegex == NULL || ulIndex == (culLength - 1)) //We end when there is no more regex left
 		{
-
 			ulEnd = ulIndex;
-			zString szResult = (zString)malloc(sizeof(zString) * (ulEnd - ulStart + 1));
-			memcpy(szResult, p_cszText + ulStart, (ulEnd - ulStart));
-			szResult[ulEnd - ulStart] = '\0';
+			const unsigned long ulLength = ulEnd - ulStart + bMatch /* bMatch tells us if last character was successfully matched*/;
+			zString szResult = (zString)malloc(sizeof(zString) * (ulLength + 1));
+			memcpy(szResult, p_cszText + ulStart, ulLength);
+			szResult[ulLength] = '\0';
 			return szResult;
 		}
 	}
-
-	return calloc(0, sizeof(zString));
+	return NULL;
 }
 
+zString regex(const zString p_cszPattern, const zString p_cszText)
+{
+	struct RegexState* pRegex = compile_regex(p_cszPattern);
+	unsigned long ulIndex = 0;
+	return regex_search(pRegex, p_cszText, &ulIndex);
+}
+
+bool regex_test(struct RegexState* p_pRegex, const zString p_cszText)
+{
+	unsigned long ulIndex = 0;
+	return regex_search(p_pRegex, p_cszText, &ulIndex) != NULL;
+}
+
+bool regex_iter(struct RegexIter* p_pIter)
+{
+	unsigned long ulIndex = 0;
+	p_pIter->m_szResult = regex_search(p_pIter->m_pRegex, p_pIter->m_cszText, &ulIndex);
+	if(p_pIter->m_szResult == NULL)
+		return false;
+
+	p_pIter->m_cszText = p_pIter->m_cszText + ulIndex;
+	return true;
+}

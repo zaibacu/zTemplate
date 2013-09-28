@@ -5,8 +5,15 @@
 
 zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockMemory* p_pBM)
 {
+	static struct RegexState* reInclude;
+	if(!reInclude)
+	{
+		reInclude = compile_regex("\\s*(include)\\s*\\(w+)");
+	}
+	//regex("\\s*(include)\\s*\\(w+)");
 	p_szSource = trim(p_szSource);
 	//Guessing this is include
+	//if(regex_test(reInclude, p_szSource))
 	{
 		long lStart = seek(p_szSource, "include", 0);
 		if(lStart != -1)

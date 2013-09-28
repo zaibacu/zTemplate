@@ -1,4 +1,4 @@
-DEBUG_LEVEL=0
+DEBUG_LEVEL=3
 ifeq ($(DEBUG_LEVEL), 0) #We don't want any debug flag here
 	DEBUG_FLAG = 
 else

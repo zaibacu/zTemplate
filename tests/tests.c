@@ -159,7 +159,17 @@ bool regex_basic_test()
 {
 	printf("Test: %s - ", __FUNCTION__);
 	zString szResult = regex("$\\w+\\s?\\d*", "<< $Hello1 23 >>");
+	printf("Result: '%s'\n", szResult);
 	bool bReturn = strcmp(szResult, "$Hello1 23") == 0;
+	free(szResult);
+	return bReturn;
+}
+
+bool regex_class_test()
+{
+	printf("Test: %s - ", __FUNCTION__);
+	zString szResult = regex("[abcd]+e", "bcae");
+	bool bReturn = strcmp(szResult, "bcae") == 0;
 	free(szResult);
 	return bReturn;
 }
@@ -186,5 +196,6 @@ int main()
 	launch_test(render_foreach_block_test);
 	launch_test(str_insert_test);
 	launch_test(regex_basic_test);
+	launch_test(regex_class_test);
 	return 0;
 }
