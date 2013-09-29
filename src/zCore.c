@@ -88,13 +88,18 @@ zString interpret(zString p_szSource, struct Param* p_pParameters, struct BlockM
 zString render(const zString p_cszTemplate, struct Param* p_pParameters)
 {
 	zString szBuffer = read_file(p_cszTemplate);
+	return render_text(szBuffer, p_pParameters);
+}
+
+zString render_text(zString p_szText, struct Param* p_pParameters)
+{
 	unsigned long ulBlockPos = 0;
 	struct Block* pBlock = NULL;
-	while((pBlock = seek_block(szBuffer, ulBlockPos, p_pParameters)) != NULL)
+	while((pBlock = seek_block(p_szText, ulBlockPos, p_pParameters)) != NULL)
 	{
-		handle_block(pBlock, p_pParameters, szBuffer);
+		handle_block(pBlock, p_pParameters, p_szText);
 	}
-	render_block(szBuffer, p_pParameters, NULL);
-	DEBUG(1, "Rendering result: %s\n", szBuffer);
-	return szBuffer;
+	render_block(p_szText, p_pParameters, NULL);
+	DEBUG(1, "Rendering result: %s\n", p_szText);
+	return p_szText;
 }

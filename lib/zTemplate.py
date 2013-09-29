@@ -55,10 +55,13 @@ Param._fields_ = [
 class zTemplate(object):
 	def __init__(self):
 		if platform.system() == "Windows":
-			self.lib = cdll.LoadLibrary("bin/zRender.dll")
+			self.lib = cdll.LoadLibrary("bin/zTemplate.dll")
 		else: 
-			self.lib = cdll.LoadLibrary("bin/zRender.so")
+			self.lib = cdll.LoadLibrary("bin/zTemplate.so")
 		self.lib.render.restype = c_char_p
+		self.lib.render.argtype = [c_char_p, PARAM_P]
+
+		self.lib.render_text.restype = c_char_p
 		self.lib.render.argtype = [c_char_p, PARAM_P]
 
 	def handle_type(self, value):
@@ -104,6 +107,15 @@ class zTemplate(object):
 		return v
 
 	def render(self, file, params = {}):
+		root = self.construct_params(params)
+		return self.lib.render(file.encode("UTF-8"), byref(root))
+
+	def render_text(self, text, params = {}):
+		root = self.construct_params(params)
+		return self.lib.render_text(text.encode("UTF-8"), byref(root))
+
+
+	def construct_params(self, params):
 		root = Param()
 		cursor = root
 		self.Values = [] #Just to keep our value structs not destroyed
@@ -123,5 +135,5 @@ class zTemplate(object):
 				p.value = VALUE_P(v)
 				cursor.next = PARAM_P(p)
 				cursor = p
-				
-		return self.lib.render(file.encode("UTF-8"), byref(root))
+
+		return root

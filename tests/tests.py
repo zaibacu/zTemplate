@@ -13,6 +13,9 @@ class TestRendering(unittest.TestCase):
 			answer = f.read().encode("UTF-8")
 		self.assertEqual(self.template.render("../tests/test_tmpl1.html", { "word": "world", "greeting": "Hello"}), answer)
 
+	def test_render_inline(self):
+		self.assertEqual("Hello world", self.template.render_text("Hello << $param >>", {"param": "world"}).decode("UTF-8"))
+
 	def test_show_block(self):
 		result = self.template.render("../tests/test_tmpl3.html", { "show_me": True, "hide_me": False}).decode("UTF-8")
 		self.assertTrue(result.find("Hidden") == -1 and result.find("Visible") >= 0)
