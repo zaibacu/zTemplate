@@ -8,6 +8,7 @@ python:
 - "3.3"
 
 before_script:
+- mkdir bin/
 script:
 - make rebuild
 - make test
