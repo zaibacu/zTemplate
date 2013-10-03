@@ -8,9 +8,6 @@ python:
 - "3.3"
 
 before_script:
-- cd ..
-- git clone https://github.com/zaibacu/zTemplate.git
 script:
-- cd zTemplate
 - make rebuild
 - make test
