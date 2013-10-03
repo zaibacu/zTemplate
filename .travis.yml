@@ -1,4 +1,6 @@
-language: C, python
+language:
+- c
+- python
 
 python: 
 - "3.3"
