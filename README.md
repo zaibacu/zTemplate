@@ -2,6 +2,9 @@ License:
 -------------------------
 This project is licensed under MIT license, look at LICENSE.md file
 
+Build Status:
+-------------------------
+[![Build Status](https://travis-ci.org/zaibacu/zTemplate.png?branch=master)](https://travis-ci.org/zaibacu/zTemplate)
 
 Description:
 -------------------------
