@@ -1,14 +1,14 @@
 language: C, python
 
 python: 
-	- "3.3"
-	- "3.2"
-	- "3.3"
+- "3.3"
+- "3.2"
+- "3.3"
 
 before_script:
-	- cd ..
-	- git clone https://github.com/zaibacu/zTemplate.git
+- cd ..
+- git clone https://github.com/zaibacu/zTemplate.git
 script:
-	- cd zTemplate
-	- make rebuild
-	- make test
+- cd zTemplate
+- make rebuild
+- make test
