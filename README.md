@@ -23,23 +23,28 @@ Common include:
 
 IF block:
 
+```
 [[ if $some_variable ]]
  You may pass
 [[end]]
+```
 
 Foreach block:
-
+```
 [[ foreach $tree in $forest ]]
  << $tree >>
 [[end]]
+```
 
 Python API:
 
+```
 from zRender import *
 
 r = zRender()
 
 rendered_html = r.render("index.html", {"name": "Mr. Awesome", "company": "Awesome Inc."})
+```
 
 Version history:
 -------------------------
